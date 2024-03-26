@@ -114,13 +114,23 @@ func toMap(metricsMap map[string][]Metric, logger logging.Logger) map[string]int
 }
 
 func metricToMap(m Metric) map[string]interface{} {
-	mapM := map[string]interface{}{}
+	mapM := m.Fields
 
-	mapM["fields"] = m.Fields
-	mapM["tags"] = m.Tags
+	for _, tag := range keepTags[m.Name] {
+		mapM[tag] = m.Tags[tag]
+	}
+	// add tags
 	mapM["timestamp"] = m.Timestamp
 
 	return mapM
+}
+
+var keepTags = map[string][]string{
+	"disk":     {"device", "fstype", "path"},
+	"temp":     {"sensor"},
+	"diskio":   {"name"},
+	"wireless": {"interface"},
+	"net":      {"interface"},
 }
 
 // A given Telegraf metric may come in multiple json readings. If tags are the same, merge fields
