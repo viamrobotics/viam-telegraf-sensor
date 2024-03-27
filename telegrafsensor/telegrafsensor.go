@@ -89,46 +89,59 @@ func (ts *TelegrafSensor) Readings(ctx context.Context, _ map[string]interface{}
 func toMap(metricsMap map[string][]Metric, logger logging.Logger) map[string]interface{} {
 	results := map[string]interface{}{}
 
-	metricsMap = reduceMetrics(metricsMap, logger)
+	metricsMap = mergeMetrics(metricsMap, logger)
 
 	for name, metrics := range metricsMap {
-		results[name] = map[string]interface{}{}
+		_, ok := results["host"]
+		if !ok {
+			results["host"] = metrics[0].Tags["host"]
+		}
+
 		if len(metrics) == 1 {
 			results[name] = metricToMap(metrics[0])
 			continue
 		}
 
+		metricsArray := []interface{}{}
+
 		for _, metric := range metrics {
-			for _, groupTag := range []string{"path", "interface", "sensor", "device", "name", "host"} {
-				if _, ok := metric.Tags[groupTag]; ok {
-					grouping := metric.Tags[groupTag].(string)
-					results[name].(map[string]interface{})[grouping] = metricToMap(metric)
-					break
-				}
-			}
+			metricsArray = append(metricsArray, metricToMap(metric))
 		}
 
+		results[name] = metricsArray
 	}
+
+	logger.Debugf("readings %v", results)
 
 	return results
 }
 
 func metricToMap(m Metric) map[string]interface{} {
-	mapM := map[string]interface{}{}
+	mapM := m.Fields
 
-	mapM["fields"] = m.Fields
-	mapM["tags"] = m.Tags
+	for _, tag := range metricsExtraFields[m.Name] {
+		mapM[tag] = m.Tags[tag]
+	}
+
 	mapM["timestamp"] = m.Timestamp
 
 	return mapM
 }
 
+var metricsExtraFields = map[string][]string{
+	"disk":     {"device", "fstype", "path"},
+	"temp":     {"sensor"},
+	"diskio":   {"name"},
+	"wireless": {"interface"},
+	"net":      {"interface"},
+}
+
 // A given Telegraf metric may come in multiple json readings. If tags are the same, merge fields
 // values to report only one Metric per set of tags.
-func reduceMetrics(metricsMap map[string][]Metric, logger logging.Logger) map[string][]Metric {
+func mergeMetrics(metricsMap map[string][]Metric, logger logging.Logger) map[string][]Metric {
 	for name, metrics := range metricsMap {
 		metric := metrics[0]
-		reduce := []Metric{metric}
+		merge := []Metric{metric}
 
 		for i := 1; i < len(metrics); i++ {
 			m := metrics[i]
@@ -141,11 +154,11 @@ func reduceMetrics(metricsMap map[string][]Metric, logger logging.Logger) map[st
 				}
 				metric.Fields = fields
 			} else {
-				reduce = append(reduce, m)
+				merge = append(merge, m)
 			}
 		}
 
-		metricsMap[name] = reduce
+		metricsMap[name] = merge
 	}
 	return metricsMap
 }
