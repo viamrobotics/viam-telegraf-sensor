@@ -22,29 +22,51 @@ This sensor will attempt to automatically setup Telegraf on your device using `a
 Navigate to the **Config** tab of your machine's page in [the Viam app](https://app.viam.com/).
 Click on the **Components** subtab and click **Create component**.
 Select the `sensor` type, then select the `viam:viam-sensor:telegrafsensor` model.
-Click **Add module**, then enter a name for your sensor and click **Create** and save your config.
+Click **Add module**, then enter a name for your sensor and click **Create**.
+
+On the new component panel, copy and paste the following attribute template into your base’s **Attributes** box:
+
+```json
+{
+    "disable_cpu": false
+    "disable_disk": false
+    "disable_disk_io": false
+    "disable_kernel": false
+    "disable_mem": false
+    "disable_net": false
+    "disable_netstat": false
+    "disable_processes": false
+    "disable_swap": false
+    "disable_system": false
+    "disable_temp": true
+    "disable_wireless": true
+}
+```
+
+Addjust your configuration and save your config.
 
 > [!NOTE]
 > For more information, see [Configure a Machine](https://docs.viam.com/manage/configuration/).
+
 
 ### Attributes
 
 The following metrics are enabled by default CPU, Disk, Disk IO, Kernel, Mem, Net, Netstat, Processes, Swap, System. Wireless and Temp are disabled by default. You can change this configuration by setting the following attributes accordingly:
 
-| Name | Type | Required | Default |
+| Name | Type | Inclusion | Default |
 |---|---|---|---|
-| disable_cpu | boolean | No | false |
-| disable_disk | boolean | No | false |
-| disable_disk_io | boolean | No | false |
-| disable_kernel | boolean | No | false |
-| disable_mem | boolean | No | false |
-| disable_net | boolean | No | false |
-| disable_netstat | boolean | No | false |
-| disable_processes | boolean | No | false |
-| disable_swap | boolean | No | false |
-| disable_system | boolean | No | false |
-| disable_temp | boolean | No | true |
-| disable_wireless | boolean | No | true | 
+| disable_cpu | boolean | Optional | false |
+| disable_disk | boolean | Optional | false |
+| disable_disk_io | boolean | Optional | false |
+| disable_kernel | boolean | Optional | false |
+| disable_mem | boolean | Optional | false |
+| disable_net | boolean | Optional | false |
+| disable_netstat | boolean | Optional | false |
+| disable_processes | boolean | Optional | false |
+| disable_swap | boolean | Optional | false |
+| disable_system | boolean | Optional | false |
+| disable_temp | boolean | Optional | true |
+| disable_wireless | boolean | Optional | true | 
 
 ### Example configuration
 
